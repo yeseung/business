@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>사업자 폐업 상태 확인</title>
+    <style>
+        #result {
+            display: inline-block;
+            margin-left: 20px;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <h1>사업자 폐업 상태 확인</h1>
+    <form id="business-form">
+        <input type="text" name="wr_4" id="wr_4" value="" class="frm_input" required="" maxlength="10" pattern="\d{10}" placeholder="사업자등록번호">
+        <div id="result"></div>
+    </form>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const input = document.getElementById('wr_4');
+            const resultDiv = document.getElementById('result');
+
+            input.addEventListener('input', function() {
+                const b_no = input.value;
+
+                // 사업자 번호가 10자리일 때만 요청을 보냅니다.
+                if (b_no.length === 10) {
+                    const data = {
+                        "b_no": [b_no]
+                    };
+
+                    fetch("https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        console.log(result);
+                        if (result.data && result.data.length > 0) {
+                            const status = result.data[0].b_stt;
+                            const taxType = result.data[0].tax_type;
+                            resultDiv.innerHTML = `<p><strong>사업자 상태:</strong> ${status}</p><p><strong>세금 유형:</strong> ${taxType}</p>`;
+                        } else {
+                            resultDiv.innerHTML = '<p>결과를 찾을 수 없습니다.</p>';
+                        }
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `<p>에러가 발생했습니다: ${error.message}</p>`;
+                    });
+                } else {
+                    resultDiv.innerHTML = ''; // 사업자 번호가 10자리가 아니면 결과를 지웁니다.
+                }
+            });
+        });
+    </script>
+</body>
+</html>
